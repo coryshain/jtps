@@ -62,7 +62,7 @@ if __name__ == '__main__':
             **kwargs_cur
         )
 
-        model.build()
+        model.build(seed=12345)
 
         model.fit(p['n_iter'])
 

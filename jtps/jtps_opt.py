@@ -31,32 +31,32 @@ def get_JTPS_optimizer_class(base_optimizer_class, session=None):
                     with tf.control_dependencies([theta_setter_op]):
                         base_update_op = super(JTPSOptimizer, self)._apply_dense(grad, var)
 
-                        delta_prev = self.get_slot(var, 'delta')
-                        var_t = self.get_slot(var, 'theta')
-
                         with tf.control_dependencies([base_update_op]):
+                            delta_prev = self.get_slot(var, 'delta')
+                            var_t = self.get_slot(var, 'theta')
                             delta = var - var_t
                             l_grad = grad * delta_prev
-                            # l_grad = tf.Print(l_grad, [
-                            #     'theta grad',
-                            #     tf.reduce_mean(grad),
-                            #     tf.reduce_min(grad),
-                            #     tf.reduce_max(grad),
-                            #     'delta prev',
-                            #     tf.reduce_mean(delta_prev),
-                            #     tf.reduce_min(delta_prev),
-                            #     tf.reduce_max(delta_prev),
-                            #     'lambda_grad',
-                            #     tf.reduce_mean(l_grad),
-                            #     tf.reduce_max(l_grad),
-                            #     tf.reduce_mean(l_grad)
-                            # ])
                             l_var = self.get_slot(var, 'lambda')
-                            # l_update = super(JTPSOptimizer, self)._apply_dense(l_grad, l_var)
-                            l_update = l_var.assign_sub(l_grad)
+                            l_update = super(JTPSOptimizer, self)._apply_dense(l_grad, l_var)
+                            # l_update = l_var.assign_sub(l_grad)
+                            # l_update = tf.no_op()
 
                             with tf.control_dependencies([l_update]):
-                                new_var = var + l_var * delta
+                                new_var = var_t + l_var * delta
+                                # new_var = tf.Print(new_var, [
+                                #     'theta grad',
+                                #     tf.reduce_mean(grad),
+                                #     tf.reduce_min(grad),
+                                #     tf.reduce_max(grad),
+                                #     'delta prev',
+                                #     tf.reduce_mean(delta_prev),
+                                #     tf.reduce_min(delta_prev),
+                                #     tf.reduce_max(delta_prev),
+                                #     'lambda_grad',
+                                #     tf.reduce_mean(l_grad),
+                                #     tf.reduce_max(l_grad),
+                                #     tf.reduce_mean(l_grad)
+                                # ])
                                 var_update = state_ops.assign(var, new_var)
 
                                 delta_prev_update = delta_prev.assign(delta)

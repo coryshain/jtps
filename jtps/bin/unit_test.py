@@ -9,11 +9,12 @@ from jtps.jtps_opt import get_JTPS_optimizer_class
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
-optimizer_names = ['GradientDescentOptimizer', 'AdagradOptimizer', 'AdadeltaOptimizer', 'FtrlOptimizer', 'RMSPropOptimizer', 'AdamOptimizer']
-N = 50000
+optimizer_names = ['GradientDescentOptimizer', 'RMSPropOptimizer', 'AdamOptimizer', 'AdagradOptimizer', 'AdadeltaOptimizer', 'FtrlOptimizer']
+N = 10000
 P = 1000
 M = N // P
 D = 100
+L = 0.01
 
 with tf.Session() as sess:
     x1 = tf.Variable(tf.zeros([D//2]))
@@ -26,8 +27,8 @@ with tf.Session() as sess:
     optimizers = []
     optimizers_jtps = []
     for name in optimizer_names:
-        optimizers.append(getattr(tf.train, name)(0.001))
-        optimizers_jtps.append(get_JTPS_optimizer_class(getattr(tf.train, name), session=sess)(0.001))
+        optimizers.append(getattr(tf.train, name)(L))
+        optimizers_jtps.append(get_JTPS_optimizer_class(getattr(tf.train, name), session=sess)(L))
     train_ops = [opt.minimize(loss) for opt in optimizers]
     train_ops_jtps = [opt.minimize(loss) for opt in optimizers_jtps]
 

@@ -15,8 +15,6 @@ from jtps.util import *
 
 tf_config = tf.ConfigProto()
 tf_config.gpu_options.allow_growth = True
-tf.set_random_seed(12345)
-np.random.seed(12345)
 
 
 class Classifier(object):
@@ -46,8 +44,8 @@ class Classifier(object):
         self.input_shape = list(x_train.shape[1:])
         self.num_classes = int(np.max(y_train)) + 1
 
-        self._initialize_metadata()
         self._initialize_session()
+        self._initialize_metadata()
 
     def _initialize_session(self):
         self.g = tf.Graph()
@@ -570,7 +568,13 @@ class Classifier(object):
     # Public methods
     ############################################################
 
-    def build(self, outdir=None, restore=True):
+    def build(self, seed=None, outdir=None, restore=True):
+        if seed is not None:
+            with self.sess.as_default():
+                with self.sess.graph.as_default():
+                    tf.set_random_seed(seed)
+                    np.random.seed(seed)
+
         if outdir is None:
             if not hasattr(self, 'outdir'):
                 self.outdir = './jtps_test_model/'
@@ -806,6 +810,8 @@ class Classifier(object):
                     loss /= n_minibatch
                     reg /= n_minibatch
 
+                    self.sess.run(self.incr_global_step)
+
                     if self.global_step.eval(session=self.sess) % self.save_freq == 0:
                         self.save()
 
@@ -851,8 +857,6 @@ class Classifier(object):
                         t1_iter = time.time()
                         time_str = pretty_print_seconds(t1_iter - t0_iter)
                         sys.stderr.write('Iteration time: %s\n' % time_str)
-
-                    self.sess.run(self.incr_global_step)
 
     def predict(self, X, minibatch_size=None, verbose=True):
         n = len(X)
