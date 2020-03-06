@@ -9,8 +9,8 @@ from jtps.model import Classifier
 from jtps.util import stderr
 
 
-SEARCH_FIELDS = ['optim_name', 'learning_rate', 'use_jtps']
-SEARCH_ABBRV = ['o', 'l', 'j']
+SEARCH_FIELDS = ['optim_name', 'learning_rate', 'meta_learning_rate', 'use_jtps']
+SEARCH_ABBRV = ['o', 'l', 'ml', 'j']
 USE_JTPS = [True]
 
 

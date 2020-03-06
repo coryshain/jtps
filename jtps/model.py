@@ -119,6 +119,9 @@ class Classifier(object):
         if isinstance(self.learning_rate, str):
             self.learning_rate = float(self.learning_rate)
 
+        if isinstance(self.meta_learning_rate, str):
+            self.meta_learning_rate = float(self.meta_learning_rate)
+
         self.predict_mode = False
 
     def _pack_metadata(self):
@@ -401,10 +404,10 @@ class Classifier(object):
 
                 if use_jtps:
                     optimizer_class = get_JTPS_optimizer_class(optimizer_class, session=self.sess)
+                    optimizer_kwargs['meta_learning_rate'] = self.meta_learning_rate
+                    optimizer_kwargs['granularity'] = 'variable'
 
                 optim = optimizer_class(*optimizer_args, **optimizer_kwargs)
-
-                print(optimizer_class)
 
                 self.optim = optim
 
@@ -423,10 +426,7 @@ class Classifier(object):
                 self.train_op = self.optim.minimize(self.total_loss, global_step=self.global_batch_step)
 
                 if self.use_jtps:
-                    self.jtps_lambda = tf.concat(
-                        [tf.reshape(self.optim.get_slot(var, 'lambda'), [-1]) for var in tf.trainable_variables()],
-                        axis=0
-                    )
+                    self.jtps_lambda = self.optim.get_flattened_lambdas()
                     self.jtps_lambda_min = tf.reduce_min(self.jtps_lambda)
                     self.jtps_lambda_max = tf.reduce_max(self.jtps_lambda)
                     self.jtps_lambda_mean = tf.reduce_mean(self.jtps_lambda)

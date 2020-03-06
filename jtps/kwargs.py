@@ -150,18 +150,6 @@ MODEL_KWARGS = [
         "Task to perform. One of ``['mnist', 'cifar']``."
     ),
     Kwarg(
-        'base_optimizer',
-        'AdamOptimizer',
-        str,
-        "Tensorflow class name of base optimizer to use. Supports any optimizer class in ``tf.train``, as well as ``'NadamOptimizer'``."
-    ),
-    Kwarg(
-        'use_jtps',
-        False,
-        [bool, str],
-        "Whether to modify the base optimizer using JTPS. If ``False``, runs a baseline model. If ``True``, runs a test model."
-    ),
-    Kwarg(
         'float_type',
         'float32',
         str,
@@ -367,6 +355,12 @@ MODEL_KWARGS = [
             - ``'Nadam'``"""
     ),
     Kwarg(
+        'use_jtps',
+        False,
+        [bool, str],
+        "Whether to modify the base optimizer using JTPS. If ``False``, runs a baseline model. If ``True``, runs a test model."
+    ),
+    Kwarg(
         'max_global_gradient_norm',
         None,
         [float, None],
@@ -389,6 +383,18 @@ MODEL_KWARGS = [
         0.001,
         [float, str],
         "Initial value for the learning rate."
+    ),
+    Kwarg(
+        'meta_learning_rate',
+        None,
+        [float, str, None],
+        "Initial value for the JTPS meta learning rate."
+    ),
+    Kwarg(
+        'jtps_lambda_fn',
+        'softplus',
+        str,
+        "Function to apply to lambda vector in JTPS. One of ['identity', 'softplus']."
     ),
     Kwarg(
         'learning_rate_min',
