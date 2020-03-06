@@ -3,28 +3,31 @@ import os
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+from tensorflow.python.ops import control_flow_ops
 
-from jtps.backend import get_JTPS_optimizer_class
+from jtps.jtps_opt import get_JTPS_optimizer_class
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
-optimizer_names = ['GradientDescentOptimizer', 'AdagradOptimizer', 'AdadeltaOptimizer', 'FtrlOptimizer', 'AdamOptimizer']
+optimizer_names = ['GradientDescentOptimizer', 'AdagradOptimizer', 'AdadeltaOptimizer', 'FtrlOptimizer', 'RMSPropOptimizer', 'AdamOptimizer']
 N = 50000
 P = 1000
 M = N // P
 D = 100
 
 with tf.Session() as sess:
-    x = tf.Variable(tf.zeros([D]))
+    x1 = tf.Variable(tf.zeros([D//2]))
+    x2 = tf.Variable(tf.zeros([D//2]))
+    x = tf.concat([x1, x2], axis=0)
     y = tf.Variable(tf.linspace(-100., 100., D), trainable=False)
-    reset_init = tf.assign(x, tf.zeros([D]))
+    reset_init = control_flow_ops.group(*[tf.assign(x1, tf.zeros([D//2])), tf.assign(x2, tf.zeros([D//2]))])
     loss = tf.reduce_mean((y - x)**2)
 
     optimizers = []
     optimizers_jtps = []
     for name in optimizer_names:
         optimizers.append(getattr(tf.train, name)(0.001))
-        optimizers_jtps.append(get_JTPS_optimizer_class(getattr(tf.train, name))(0.001))
+        optimizers_jtps.append(get_JTPS_optimizer_class(getattr(tf.train, name), session=sess)(0.001))
     train_ops = [opt.minimize(loss) for opt in optimizers]
     train_ops_jtps = [opt.minimize(loss) for opt in optimizers_jtps]
 
