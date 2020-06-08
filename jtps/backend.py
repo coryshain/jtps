@@ -284,41 +284,6 @@ def make_lambda(layer, session=None, use_kwargs=False):
             return apply_layer
 
 
-## Thanks to Keisuke Fujii (https://github.com/blei-lab/edward/issues/708) for this idea
-def get_clipped_optimizer_class(base_optimizer_class, session=None):
-    session = get_session(session)
-    with session.as_default():
-        with session.graph.as_default():
-            class ClippedOptimizer(base_optimizer_class):
-                def __init__(self, *args, max_global_norm=None, **kwargs):
-                    super(ClippedOptimizer, self).__init__(*args, **kwargs)
-                    self.max_global_norm = max_global_norm
-
-                def compute_gradients(self, *args, **kwargs):
-                    grads_and_vars = super(ClippedOptimizer, self).compute_gradients(*args, **kwargs)
-                    if self.max_global_norm is None:
-                        return grads_and_vars
-                    grads = tf.clip_by_global_norm([g for g, _ in grads_and_vars], self.max_global_norm)[0]
-                    vars = [v for _, v in grads_and_vars]
-                    grads_and_vars = []
-                    for grad, var in zip(grads, vars):
-                        grads_and_vars.append((grad, var))
-                    return grads_and_vars
-
-                def apply_gradients(self, grads_and_vars, **kwargs):
-                    if self.max_global_norm is None:
-                        return grads_and_vars
-                    grads, _ = tf.clip_by_global_norm([g for g, _ in grads_and_vars], self.max_global_norm)
-                    vars = [v for _, v in grads_and_vars]
-                    grads_and_vars = []
-                    for grad, var in zip(grads, vars):
-                        grads_and_vars.append((grad, var))
-
-                    return super(ClippedOptimizer, self).apply_gradients(grads_and_vars, **kwargs)
-
-            return ClippedOptimizer
-
-
 ############################################################
 # Cells
 ############################################################

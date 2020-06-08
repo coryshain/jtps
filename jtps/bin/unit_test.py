@@ -5,24 +5,27 @@ import pandas as pd
 import tensorflow as tf
 from tensorflow.python.ops import control_flow_ops
 
-from jtps.jtps_opt import get_JTPS_optimizer_class
+from jtps.opt import get_JTPS_optimizer_class
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
-optimizer_names = ['GradientDescentOptimizer', 'RMSPropOptimizer', 'AdamOptimizer', 'AdagradOptimizer', 'AdadeltaOptimizer', 'FtrlOptimizer']
-N = 10000
-P = 1000
+optimizer_names = ['GradientDescentOptimizer', 'RMSPropOptimizer', 'AdamOptimizer']
+N = 500
+P = 500
 M = N // P
 D = 100
-L = 0.01
+L = 0.001
 
 with tf.Session() as sess:
-    x1 = tf.Variable(tf.zeros([D//2]))
-    x2 = tf.Variable(tf.zeros([D//2]))
-    x = tf.concat([x1, x2], axis=0)
-    y = tf.Variable(tf.linspace(-100., 100., D), trainable=False)
-    reset_init = control_flow_ops.group(*[tf.assign(x1, tf.zeros([D//2])), tf.assign(x2, tf.zeros([D//2]))])
-    loss = tf.reduce_mean((y - x)**2)
+    # Optimizing Rosenbrock function
+    np.random.seed(0)
+    x1_init = np.random.uniform(low=-3, high=3, size=(1,))
+    x2_init = np.random.uniform(low=-3, high=3, size=(1,))
+
+    x1 = tf.Variable(x1_init)
+    x2 = tf.Variable(x2_init)
+    loss = (1 - x1)**2 + 100 * (x2 - x1**2)**2
+    reset_init = control_flow_ops.group(*[tf.assign(x1, x1_init), tf.assign(x2, x2_init)])
 
     optimizers = []
     optimizers_jtps = []
@@ -42,7 +45,7 @@ with tf.Session() as sess:
                 sys.stderr.write('Fitting using %s-JTPS...\n' % optimizer_names[o])
                 opt = optimizers_jtps[o]
                 train_op = train_ops_jtps[o]
-                l = tf.concat([tf.reshape(opt.get_slot(var, 'lambda'), [-1]) for var in tf.trainable_variables()], axis=0)
+                l = opt.get_flattened_lambdas()
                 l_mean = tf.reduce_mean(l)
                 loss_all = np.zeros(P)
                 lambda_all = np.zeros(P)
@@ -53,6 +56,10 @@ with tf.Session() as sess:
                 loss_all = np.zeros(P)
 
             sess.run(reset_init)
+            _x1, _x2, _y = sess.run([x1, x2, loss])
+            print(_x1)
+            print(_x2)
+            print(_y)
 
             for i in range(N):
                 pb = tf.contrib.keras.utils.Progbar(N)

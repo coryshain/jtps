@@ -2,10 +2,10 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 
-optimizer_names = ['GradientDescentOptimizer', 'RMSPropOptimizer', 'AdamOptimizer', 'AdagradOptimizer', 'AdadeltaOptimizer', 'FtrlOptimizer']
+optimizer_names = ['GradientDescentOptimizer', 'RMSPropOptimizer', 'AdamOptimizer']
 
 df = pd.read_csv('learning_curves.csv')
-df['iter'] = np.arange(0, 10000, 10) + 1
+df['iter'] = np.arange(0, 500, 1) + 1
 
 cm = plt.get_cmap('gist_rainbow')
 

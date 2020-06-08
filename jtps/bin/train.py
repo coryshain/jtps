@@ -40,7 +40,7 @@ if __name__ == '__main__':
     grid_search = []
     for f, a in zip(SEARCH_FIELDS, SEARCH_ABBRV):
         dtype = type(kwargs[f])
-        val = [(f, a, dtype(x)) for x in str(kwargs[f]).split()]
+        val = [(f, a, dtype(x)) if kwargs[f] is not None else (f, a, x) for x in str(kwargs[f]).split()]
         grid_search.append(val)
 
     grid_search = itertools.product(*grid_search)

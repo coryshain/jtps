@@ -9,7 +9,7 @@ import tensorflow as tf
 
 from jtps.kwargs import MODEL_KWARGS
 from jtps.backend import *
-from jtps.jtps_opt import get_JTPS_optimizer_class
+from jtps.opt import get_clipped_optimizer_class, get_JTPS_optimizer_class
 from jtps.util import *
 
 
@@ -120,7 +120,10 @@ class Classifier(object):
             self.learning_rate = float(self.learning_rate)
 
         if isinstance(self.meta_learning_rate, str):
-            self.meta_learning_rate = float(self.meta_learning_rate)
+            if self.meta_learning_rate.lower() == 'none':
+                self.meta_learning_rate = None
+            else:
+                self.meta_learning_rate = float(self.meta_learning_rate)
 
         self.predict_mode = False
 
@@ -405,7 +408,6 @@ class Classifier(object):
                 if use_jtps:
                     optimizer_class = get_JTPS_optimizer_class(optimizer_class, session=self.sess)
                     optimizer_kwargs['meta_learning_rate'] = self.meta_learning_rate
-                    optimizer_kwargs['granularity'] = 'variable'
 
                 optim = optimizer_class(*optimizer_args, **optimizer_kwargs)
 
@@ -830,6 +832,13 @@ class Classifier(object):
 
                         preds_test = self.predict(x_test, verbose=verbose)
                         eval_test = self.evaluate(y_test, preds_test)
+
+                        stderr('\n')
+                        stderr('TEST SET EVAL:\n')
+                        stderr('  ACC: %.2f\n' % (eval_test['acc'] * 100))
+                        stderr('  P:   %.2f\n' % (eval_test['p'] * 100))
+                        stderr('  R:   %.2f\n' % (eval_test['r'] * 100))
+                        stderr('  F1:  %.2f\n\n' % (eval_test['f1'] * 100))
 
                         summary_eval_train = self.sess.run(
                             self.summary_evaluation,
